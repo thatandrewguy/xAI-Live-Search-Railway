@@ -1,6 +1,6 @@
 body {
-    background-color: #5D83A6;
-    color: #333;
+    background: linear-gradient(to bottom left, #21242, #161110, #101923, #08100C, #23262A, #1A2228);
+    color: #fff;
     font-family: sans-serif;
     margin: 0;
     padding: 20px;
@@ -11,7 +11,7 @@ body {
 }
 
 .container {
-    background-color: #FFFFFF;
+    background-color: rgba(0, 0, 0, 0.5);
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -20,7 +20,7 @@ body {
 }
 
 h1 {
-    color: #701D1C;
+    color: #fff;
     text-align: center;
     margin-bottom: 20px;
 }
@@ -32,7 +32,7 @@ h1 {
 label {
     display: block;
     margin-bottom: 5px;
-    color: #5D83A6;
+    color: #fff;
     font-weight: bold;
 }
 
@@ -45,6 +45,8 @@ select {
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
+    background-color: #333;
+    color: #fff;
 }
 
 .checkbox-group {
@@ -55,7 +57,7 @@ select {
 
 button {
     background-color: #FFC872;
-    color: #701D1C;
+    color: #000;
     padding: 10px 15px;
     border: none;
     border-radius: 4px;
@@ -70,7 +72,7 @@ button:hover {
 }
 
 .result-content {
-    background-color: #f9f9f9;
+    background-color: rgba(0, 0, 0, 0.5);
     padding: 15px;
     border-radius: 4px;
     margin-bottom: 20px;
