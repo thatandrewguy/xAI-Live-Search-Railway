@@ -100,3 +100,7 @@ button:hover {
 .back-link:hover {
     background-color: #4a6a85;
 }
+
+.citations-container a {
+    color: #fff;
+}
