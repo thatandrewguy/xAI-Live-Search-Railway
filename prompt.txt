@@ -1,0 +1,347 @@
+Create a Python Flask app for deployment on railway.com.
+
+This app will interact with XAI's 'Live Search' API endpoint. The documentation for this can be found at 'https://docs.x.ai/docs/guides/live-search'.
+
+Create a Python Flask app for deployment on railway.com. When the app loads, it requires user input. This will be the first page the user sees when they land on the app.
+
+(0) 'Search Term': This is a mandatory field. The user must enter a question or a search term they want to find the answer to. The search term has a maximum character count of 500.
+(1) 'Enable Search': This field is optional. The user can select either 'On', 'Off', or 'Auto'. This selection defaults to 'Auto'. 
+(2) 'Return Citations': This field is optional. The user can select either 'True' or 'False'. This selection defaults to 'False'.
+(3) 'From Date Range': This field is optional. If the user chooses to enter data here, it must be in ISO 8601 format, e.g., "YYYY-MM-DD".
+(4) 'To Date Range': This field is optional. If the user chooses to enter data here, it must be in ISO 8601 format, e.g., "YYYY-MM-DD".
+(5) 'Maximum Data Sources': This field is optional. If the user chooses to enter a value here, it must be an integer. The maximum value the user can enter is 20. The default limit is 20. 
+(6) 'Data Source': These fields are optional. The user can select any of the following options: 'Web', 'News', 'RSS', or 'X'. If nothing is specified, the default selection is "Web" and "X".
+(6a) 'Country': This field is optional. It only applies to the selection of 'Web' or 'News' in (6). If the user selects either 'Web' or 'News', they have the option to enter an ISO alpha-2 code for a country.
+(6b) 'Excluded Websites': This field is optional and only applies to either the 'Web', 'News', or both in (6). The user has the option to enter up to a maximum of five websites for this option. It must be in the format of 'wikipedia.org', 'bbc.co.uk', 'reddit.com' - no 'https://')
+(6c) 'Allowed Websites': This field is optional and available if the user either selected 'Web' or 'News' in (6). The user has the option to enter up to a maximum of five websites for this option. The user cannot enter the same website address in 'Allowed Websites' and 'Excluded Websites'.
+(7) 'X Handles': This field is optional and available if the user selected only 'X' in (6). The user has the option to enter up to a maximum of five X handles (without the '@' - so instead of '@Tesla', the user should enter'Tesla').
+(8) 'Links': This field is mandatory if the user selection in (6) consisted of 'RSS'. The user can only enter one URL of an RSS feed. The full URL must be entered (eg, 'https://status.x.ai/feed.xml')
+(9) 'Safe Search': This field is optional. 'Safe Search' is on by default, and it is only available for the 'Data Source' of 'Web' or 'News' or both in (6).
+
+To recap:
+
+If the 'Data Source' is 'Web', the supported parameters are 'Country', 'Excluded Websites', 'Allowed Websites' and 'Safe Search'.
+If the 'Data Source' is 'X', the supported parameter is 'X Handles'. The user can only enter a maximum of five X handles.
+If the 'Data Source' is 'News', the supported parameters are 'Country', 'Excluded Websites' or 'Safe Search'.
+If the 'Data Source' is 'RSS', the supported parameter is 'Links'. The user can only enter one URL.
+####################
+
+Once the web app has collected the above information, it needs to be passed to the API endpoint in the following manner:
+
+####################
+
+This is the call to the API endpoint that would be made if the only mandatory field ('Search Term') is entered:
+
+```
+url = "https://api.x.ai/v1/chat/completions"
+headers = {
+    "Content-Type": "application/json",
+    "Authorization": f"Bearer {os.getenv('XAI_API_KEY')}"
+}
+payload = {
+    "messages": [
+        {
+            "role": "user",
+            "content": "[The user's selection made at (0)]"
+        }
+    ],
+    "search_parameters": {
+        "mode": "auto"
+    },
+    "model": "grok-3-latest"
+}
+```
+####################
+
+If the user selects either 'On' or 'Off' at (1), update the value for the "mode" key to their choice. Their selection needs to be entered in lowercase. For example, if the user selected 'On', the value for "mode" would be:  
+```
+    "search_parameters": {
+        "mode": "on"
+    },
+```
+If the user selected "Off" at (1), then update the "mode" value to:
+```
+    "search_parameters": {
+        "mode": "off"
+    },
+```
+If the user does not make a selection at (1), the "mode" value defaults to "auto":
+```
+    "search_parameters": {
+        "mode": "auto"
+    },
+```
+
+####################
+
+If the user selects "True" at (2), then add a new key called "return_citations" to the "search_parameters" payload:
+```
+    "search_parameters": {
+        "mode": "auto",
+        "return_citations": True
+    },
+```
+If the user selects "False" at (2) or does not make a selection, then the key "return_citations" will default to a value of 'False':
+```
+    "search_parameters": {
+        "mode": "auto",
+        "return_citations": False
+    },
+```
+
+####################
+
+If the user enters a value for either 'From Date Range' or 'To Date Range', add the keys "from_date" or "to_date" to the "search_parameters" payload, respectively:
+```
+    "search_parameters": {
+        "mode": "on",
+        "from_date": "[The user's ISO 8601 format selection made at (3)]",
+        "to_date": "[The user's ISO 8601 format selection made at (4)]",
+    },
+
+```
+If the user only entered a 'From Date Range' or a 'To Date Range', only add that particular key to the "search_parameters" payload. For example, if the user only entered a value for 'To Date Range':
+```
+    "search_parameters": {
+        "mode": "off",
+        "to_date": "2025-04-28",
+    },
+
+```
+
+####################
+
+If the user enters an integer value for 'Maximum Data Sources', add the key "max_search_results" to the "search_parameters" payload. For example, if the user entered '15':
+```
+    "search_parameters": {
+        "mode": "on",
+        "to_date": "2025-06-25",
+        "max_search_results": 15
+    },
+```
+
+####################
+
+
+(6) 'Data Source': These fields are optional. The user can select any of the following options: 'Web', 'News', 'RSS', or 'X'. If nothing is specified, the default selection is "Web" and "X".
+
+If the user selects 'News' at (6), then add the key "sources" to the "search_parameters" payload and nest the key "type" with the value "news". For example, if the user only selected 'News':
+```
+    "search_parameters": {
+        "mode": "auto",
+        "max_search_results": 10,
+        "sources": [
+          { "type": "news"}
+        ]
+    },
+```
+If the user selected 'News', 'Web' at (6), then nest the keys "source" and "types" with the chosen values as such:
+```
+    "search_parameters": {
+        "mode": "auto",
+        "to_date": "2025-06-25",
+        "max_search_results": 3,
+        "sources": [
+          { "type": "web"},
+          { "type": "news"}
+        ]
+    },
+
+```
+If the user selected 'RSS' at (6), then a URL is required for this. The URL must be nominated at (8) and used within the nested "type" with a "links" key:
+```
+    "search_parameters": {
+        "mode": "auto",
+        "to_date": "2025-06-25",
+        "max_search_results": 3,
+        "sources": [
+          { "type": "web"},
+          { "type": "news"},
+          { "type": "rss", "links": ["https://status.x.ai/feed.xml"] }
+        ]
+    },
+```
+If the user selected 'X' at (6), then use the "type" is "x":
+```
+    "search_parameters": {
+        "mode": "on",
+        "from_date": "2025-01-01",
+        "max_search_results": 3,
+        "sources": [
+          { "type": "web"},
+          { "type": "x"}
+        ]
+    },
+```
+If the user entered any 'X Handles' at (7), then nest these with the key "x_handles" in the "type" with the value "x". The 'X Handles' nominated in (7) are placed below - "starlink" and "elonmusk":
+```
+    "search_parameters": {
+        "mode": "on",
+        "from_date": "2025-01-01",
+        "to_date": "2025-06-27",
+        "max_search_results": 5,
+        "sources": [
+          { "type": "web"},
+          { "type": "x", "x_handles": ["starlink", "elonmusk"]}
+        ]
+    },
+```
+If the user entered a 'Country' at (6a), this ISO alpha-2 code can only be nested with the key of "country" against the 'Data Source', (6), for the keys of "web" and "news":  
+```
+    "search_parameters": {
+        "mode": "auto",
+        "to_date": "2025-06-27",
+        "max_search_results": 1,
+        "sources": [
+          { "type": "web", "country": "NZ"},
+          { "type": "news", "country": "NZ"}
+        ]
+    },
+```
+or
+```
+    "search_parameters": {
+        "mode": "auto",
+        "to_date": "2025-06-27",
+        "max_search_results": 1,
+        "sources": [
+          { "type": "news", "country": "NZ"}
+        ]
+    },
+```
+If the user entered a 'Data Source' of 'Web', then they may elect at (6c) to nominate an 'Allowed Website'. The key for 'Allowed Website' is "allowed_websites" and this is nested in the "type" of "web". For example, if the user at (6c) nominated 'x.ai', 'reddit.com' and 'news.ycombinator.com' to be permitted, the "search_parameters" payload would look like:
+```
+    "search_parameters": {
+        "mode": "auto",
+        "to_date": "2025-06-27",
+        "max_search_results": 3,
+        "sources": [
+          { "type": "web", "allowed_websites": ["x.ai", "reddit.com", "news.ycombinator.com"] },
+        ]
+    },
+```
+A full python request of the above looks like:
+
+```
+url = "https://api.x.ai/v1/chat/completions"
+headers = {
+    "Content-Type": "application/json",
+    "Authorization": f"Bearer {os.getenv('XAI_API_KEY')}"
+}
+payload = {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Is dating a pleasant experience as a middle aged white male?"
+      }
+    ],
+    "search_parameters": {
+        "mode": "auto",
+        "to_date": "2025-06-27",
+        "max_search_results": 10,
+        "sources": [
+          { "type": "web", "allowed_websites": ["x.ai", "reddit.com", "news.ycombinator.com"] },
+        ]
+    },
+    "model": "grok-3-latest"
+}
+```
+'Excluded Websites' at (6b), is similar to the above. If the user nominated to exclude 'wikipedia.org' and 'bbc.co.uk', from the '"type": "web"', the "search_parameters" would look like:
+```
+    "search_parameters": {
+        "mode": "on",
+        "to_date": "2025-05-25",
+        "max_search_results": 5,
+        "sources": [
+          { "type": "web", "excluded_websites": ["wikipedia.org", "bbc.co.uk"] }
+        ]
+    },
+```
+If the user wanted to exclude 'wikipedia.org' and 'reddit.com' from the '"type": "web"' and exclude 'bbc.co.uk' from the '"type": "news"', the "search_parameters" would look like:
+```
+    "search_parameters": {
+        "mode": "on",
+        "to_date": "2025-05-25",
+        "max_search_results": 5,
+        "sources": [
+          { "type": "web", "excluded_websites": ["wikipedia.org", "reddit.com"] },
+          { "type": "news", "excluded_websites": ["bbc.co.uk"] }          
+        ]
+    },
+``` 
+====================
+Safe search is on by default. If the user wanted to disable 'Safe Search' for the "web", the "search_parameters" would look like:
+```
+    "search_parameters": {
+        "mode": "on",
+        "to_date": "2025-05-25",
+        "max_search_results": 5,
+        "sources": [
+          { "type": "web", "excluded_websites": ["wikipedia.org", "reddit.com"], "safe_search": False },
+          { "type": "news", "excluded_websites": ["bbc.co.uk"] }   
+        ]
+    },
+``` 
+If the user wanted to disable 'Safe Search' for both the "web" and "news", the "search_parameters" would look like:
+```
+    "search_parameters": {
+        "mode": "on",
+        "to_date": "2025-05-25",
+        "max_search_results": 5,
+        "sources": [
+          { "type": "web", "excluded_websites": ["wikipedia.org", "reddit.com"], "safe_search": False },
+          { "type": "news", "excluded_websites": ["bbc.co.uk"], "safe_search": False  }       
+        ]
+    },
+```
+====================
+A full script can look like:
+
+```
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "requests~=2.32.4"
+# ]
+# ///
+
+import os
+import requests
+
+url = "https://api.x.ai/v1/chat/completions"
+headers = {
+    "Content-Type": "application/json",
+    "Authorization": f"Bearer {os.getenv('XAI_API_KEY')}"
+}
+payload = {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Is dating a pleasant experience as a middle aged white male?"
+      }
+    ],
+    "search_parameters": {
+        "mode": "on",
+        "to_date": "2025-05-25",
+        "max_search_results": 5,
+        "sources": [
+          { "type": "web", "excluded_websites": ["wikipedia.org", "reddit.com"], "safe_search": False },
+          { "type": "news", "excluded_websites": ["bbc.co.uk"], "safe_search": False  }       
+        ]
+    },
+    "model": "grok-3-latest"
+}
+
+response = requests.post(url, headers=headers, json=payload)
+response_data = response.json()
+
+# Extract and print just the content
+content = response_data['choices'][0]['message']['content']
+print(content)
+```
+Print the '(content') on a new page. Have a link on that page that allows the user to go back to the start and enter a new search term.
+
+Have a lovely looking page - one that is easy on the eye, aesthetically pleasing, easy to understand and read and uses the hex colours: 5D83A6, FFC872, 701D1C.
+
+Structure this app so it can be deployed on railway.com. Once this script is good, I will push it to my GitHub for deployment to railway.com. Use Astral's Python package manager 'uv'.

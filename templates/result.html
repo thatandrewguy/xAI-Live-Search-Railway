@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Search Result</h1>
+        <div class="result-content">
+            {{ content|trim|safe }}
+        </div>
+        <a href="/" class="back-link">New Search</a>
+        {% if citations %}
+        <div class="citations-container">
+            <h2>Citations</h2>
+            <ul>
+                {% for citation in citations %}
+                <li><a href="{{ citation }}" target="_blank">{{ citation }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XAI Live Search</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>XAI Live Search</h1>
+        <form action="/search" method="post">
+            <div class="form-group">
+                <label for="xai_api_key">XAI API Key *</label>
+                <input type="text" id="xai_api_key" name="xai_api_key" required>
+            </div>
+            <div class="form-group">
+                <label for="search_term">Search Term (max 500 chars) *</label>
+                <input type="text" id="search_term" name="search_term" maxlength="500" required>
+            </div>
+
+            <div class="form-group">
+                <label for="enable_search">Enable Search</label>
+                <select id="enable_search" name="enable_search">
+                    <option value="auto" selected>Auto</option>
+                    <option value="on">On</option>
+                    <option value="off">Off</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="return_citations">Return Citations</label>
+                <select id="return_citations" name="return_citations">
+                    <option value="False" selected>False</option>
+                    <option value="True">True</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="from_date">From Date (YYYY-MM-DD)</label>
+                <input type="text" id="from_date" name="from_date" pattern="\d{4}-\d{2}-\d{2}">
+            </div>
+
+            <div class="form-group">
+                <label for="to_date">To Date (YYYY-MM-DD)</label>
+                <input type="text" id="to_date" name="to_date" pattern="\d{4}-\d{2}-\d{2}">
+            </div>
+
+            <div class="form-group">
+                <label for="max_search_results">Maximum Data Sources (max 20)</label>
+                <input type="number" id="max_search_results" name="max_search_results" min="1" max="20" value="20">
+            </div>
+
+            <div class="form-group">
+                <label>Data Source (defaults to Web and X)</label>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="web" name="data_source" value="web">
+                    <label for="web">Web</label>
+                    <input type="checkbox" id="news" name="data_source" value="news">
+                    <label for="news">News</label>
+                    <input type="checkbox" id="rss" name="data_source" value="rss">
+                    <label for="rss">RSS</label>
+                    <input type="checkbox" id="x" name="data_source" value="x">
+                    <label for="x">X</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="country_web">Country for Web (ISO alpha-2)</label>
+                <input type="text" id="country_web" name="country_web">
+            </div>
+            
+            <div class="form-group">
+                <label for="country_news">Country for News (ISO alpha-2)</label>
+                <input type="text" id="country_news" name="country_news">
+            </div>
+
+            <div class="form-group">
+                <label for="web_filter_type">Web Filter</label>
+                <select id="web_filter_type" name="web_filter_type">
+                    <option value="none" selected>None</option>
+                    <option value="excluded">Excluded Websites</option>
+                    <option value="allowed">Exclusive Websites</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="web_filter_sites_group" style="display: none;">
+                <label for="web_filter_sites" id="web_filter_sites_label">Websites for Web Filter (comma-separated, max 5)</label>
+                <input type="text" id="web_filter_sites" name="web_filter_sites">
+            </div>
+
+            <div class="form-group">
+                <label for="news_filter_type">News Filter</label>
+                <select id="news_filter_type" name="news_filter_type">
+                    <option value="none" selected>None</option>
+                    <option value="excluded">Excluded Websites</option>
+                    <option value="allowed">Exclusive Websites</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="news_filter_sites_group" style="display: none;">
+                <label for="news_filter_sites" id="news_filter_sites_label">Websites for News Filter (comma-separated, max 5)</label>
+                <input type="text" id="news_filter_sites" name="news_filter_sites">
+            </div>
+
+            <div class="form-group">
+                <label for="x_handles">X Handles (comma-separated, max 5)</label>
+                <input type="text" id="x_handles" name="x_handles">
+            </div>
+
+            <div class="form-group">
+                <label for="rss_links">RSS Feed URL (mandatory if RSS is selected)</label>
+                <input type="url" id="rss_links" name="rss_links">
+            </div>
+
+            <div class="form-group">
+                <label for="safe_search_web">Safe Search for Web</label>
+                <select id="safe_search_web" name="safe_search_web">
+                    <option value="True" selected>On</option>
+                    <option value="False">Off</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="safe_search_news">Safe Search for News</label>
+                <select id="safe_search_news" name="safe_search_news">
+                    <option value="True" selected>On</option>
+                    <option value="False">Off</option>
+                </select>
+            </div>
+
+            <button type="submit">Search</button>
+        </form>
+    </div>
+    <script>
+        document.getElementById('web_filter_type').addEventListener('change', function() {
+            var webFilterSitesGroup = document.getElementById('web_filter_sites_group');
+            var webFilterSitesLabel = document.getElementById('web_filter_sites_label');
+            if (this.value === 'none') {
+                webFilterSitesGroup.style.display = 'none';
+            } else {
+                webFilterSitesGroup.style.display = 'block';
+                webFilterSitesLabel.textContent = this.options[this.selectedIndex].text + ' for Web (comma-separated, max 5)';
+            }
+        });
+
+        document.getElementById('news_filter_type').addEventListener('change', function() {
+            var newsFilterSitesGroup = document.getElementById('news_filter_sites_group');
+            var newsFilterSitesLabel = document.getElementById('news_filter_sites_label');
+            if (this.value === 'none') {
+                newsFilterSitesGroup.style.display = 'none';
+            } else {
+                newsFilterSitesGroup.style.display = 'block';
+                newsFilterSitesLabel.textContent = this.options[this.selectedIndex].text + ' for News (comma-separated, max 5)';
+            }
+        });
+    </script>
+</body>
+</html>
